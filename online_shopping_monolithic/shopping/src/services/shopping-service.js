@@ -12,7 +12,8 @@ class ShoppingService {
 	async GetCart(_id) {
 		try {
 			const cartItems = await this.repository.Cart(_id);
-			return FormateData(cartItems);
+      if(!cartItems) return {};
+			return cartItems;
 		} catch (err) {
 			throw err;
 		}
@@ -66,9 +67,11 @@ class ShoppingService {
 
 	async GetWishlist(customerId) {
 		// RPC call to get product detail
-		const { products } = await this.repository.GetWishlistByCustomerId(
+		const data = await this.repository.GetWishlistByCustomerId(
 			customerId
 		);
+    if (!data) return {};
+    const { products } = data;
 		if (Array.isArray(products)) {
 			const ids = products.map(({ _id }) => _id);
 			const productResponse = await RPCRequest('PRODUCT_RPC', {
@@ -92,18 +95,26 @@ class ShoppingService {
 	}
 
 	async GetOrder(orderId) {
-		try {
-			return await this.repository.Orders(null, orderId);
-		} catch (err) {
-			throw new APIError('Data Not found', err);
-		}
+		return await this.repository.Orders(null, orderId);
 	}
 
 	async GetOrders(customerId) {
-		try {
-			return await this.repository.Orders(customerId, null);
-		} catch (err) {
-			throw new APIError('Data Not found', err);
+		return await this.repository.Orders(customerId, null);
+	}
+
+	async DeleteProfileData(customerId) {
+		return this.repository.DeleteProfileData(customerId);
+	}
+
+	async SubscribeEvents(payload) {
+		const { event, data } = payload;
+    console.log(payload);
+		switch (event) {
+			case 'DELETE_PROFILE':
+				await this.DeleteProfileData(data.userId);
+				break;
+			default:
+				break;
 		}
 	}
 

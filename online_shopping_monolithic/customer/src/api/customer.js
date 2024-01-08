@@ -1,4 +1,4 @@
-const { CUSTOMER_BINDING_KEY } = require("../config");
+const { SHOPPING_BINDING_KEY } = require("../config");
 const CustomerService = require("../services/customer-service");
 const { PublishMsg } = require("../utils");
 const UserAuth = require("./middlewares/auth");
@@ -62,8 +62,8 @@ module.exports = (app, channel) => {
       const { _id } = req.user;
       const { data, payload } = await service.DeleteProfile({ _id });
       // Send msg to ShoppingService to remove wishlist & order
-      PublishMsg(channel, SHOPPING_SERVICE, JSON.stringify(payload));
-      return res.json(data);
+      PublishMsg(channel, SHOPPING_BINDING_KEY, JSON.stringify(payload));
+      return res.status(200).json(data);
     } catch (err) {
       next(err);
     }

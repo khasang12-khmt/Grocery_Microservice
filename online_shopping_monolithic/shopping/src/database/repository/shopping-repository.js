@@ -12,12 +12,8 @@ class ShoppingRepository {
 	// payment
 
 	async Cart(customerId) {
-		try {
-			const cart = await CartModel.findOne({ customerId });
-			return cart;
-		} catch (err) {
-			throw err;
-		}
+		const cart = await CartModel.findOne({ customerId });
+		return cart;
 	}
 
 	async ManageCart(customerId, product, qty, isRemove) {
@@ -137,6 +133,13 @@ class ShoppingRepository {
 				'Unable to Find Category'
 			);
 		}
+	}
+
+	async DeleteProfileData(customerId) {
+		return Promise.all([
+			CartModel.findOneAndDelete({ customerId }),
+			WishlistModel.findOneAndDelete({ customerId }),
+		]);
 	}
 }
 

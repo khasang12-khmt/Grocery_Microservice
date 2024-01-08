@@ -89,7 +89,6 @@ class ProductService {
     const {type, data} = payload;
     switch (type) {
       case "VIEW_PRODUCT":
-        console.log("view req");
         return this.repository.FindById(data);
       case "VIEW_PRODUCTS":
         return this.repository.FindSelectedProducts(data);
