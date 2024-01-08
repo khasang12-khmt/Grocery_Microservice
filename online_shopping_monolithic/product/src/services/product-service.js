@@ -85,15 +85,13 @@ class ProductService {
     }
   }
 
-  async SubscribeEvents(payload) {
-    const { event, data } = payload;
-
-    const { userId, product, order, qty } = data;
-
-    switch (event) {
-      case "TEST":
-        console.log("Works");
-        break;
+  async serveRPCRequest(payload){
+    const {type, data} = payload;
+    switch (type) {
+      case "VIEW_PRODUCT":
+        return this.repository.FindById(data);
+      case "VIEW_PRODUCTS":
+        return this.repository.FindSelectedProducts(data);
       default:
         break;
     }

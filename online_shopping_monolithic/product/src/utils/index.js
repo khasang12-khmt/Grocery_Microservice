@@ -2,8 +2,14 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const axios = require("axios");
 const amqplib = require("amqplib");
+const { v4: uuid4 } = require("uuid");
 
-const { APP_SECRET, MESSAGE_BROKER_URL, EXCHANGE_NAME, QUEUE_NAME } = require("../config");
+const {
+  APP_SECRET,
+  MESSAGE_BROKER_URL,
+  EXCHANGE_NAME,
+  QUEUE_NAME,
+} = require("../config");
 
 //Utility functions
 module.exports.GenerateSalt = async () => {
@@ -63,24 +69,32 @@ module.exports.FormateData = (data) => {
 
 // Communication via Message Broker
 // channel
+let amqplibConnection = null;
+
+const getChannel = async () => {
+  if (amqplibConnection === null) {
+    amqplibConnection = await amqplib.connect(MESSAGE_BROKER_URL);
+  }
+  return await amqplibConnection.createChannel();
+};
+
 module.exports.CreateChannel = async () => {
   try {
-    const connection = await amqplib.connect(MESSAGE_BROKER_URL);
-    const channel = await connection.createChannel();
-    await channel.assertExchange(EXCHANGE_NAME, 'direct', false);
+    const channel = await getChannel();
+    await channel.assertExchange(EXCHANGE_NAME, "direct", false);
     return channel;
   } catch (error) {
     throw error;
   }
-}
+};
 
 // publish
 module.exports.PublishMsg = async (channel, binding_key, message) => {
-  try{
+  try {
     await channel.publish(EXCHANGE_NAME, binding_key, Buffer.from(message));
-    console.log("sent to "+binding_key);
+    console.log("sent to " + binding_key);
     console.log(message.toString());
-  } catch(error) {
+  } catch (error) {
     throw error;
   }
 };
@@ -90,9 +104,38 @@ module.exports.SubscribeMsg = async (channel, service, binding_key) => {
   await channel.assertExchange(EXCHANGE_NAME, "direct", { durable: true });
   const appQueue = await channel.assertQueue("", { exclusive: true });
   channel.bindQueue(appQueue.queue, EXCHANGE_NAME, binding_key);
-  channel.consume(appQueue.queue, data => {
+  channel.consume(appQueue.queue, (data) => {
     console.log("received from " + binding_key);
     service.SubscribeEvents(JSON.parse(data.content.toString()));
     channel.ack(data);
-  })
+  });
+};
+
+module.exports.RPCObserver = async (RPC_QUEUE_NAME, service) => {
+  const channel = await getChannel();
+  await channel.assertQueue(RPC_QUEUE_NAME, {
+    durable: false,
+  });
+  channel.prefetch(1);
+  channel.consume(
+    RPC_QUEUE_NAME,
+    async (msg) => {
+      if (msg.content) {
+        // DB Operation
+        const payload = JSON.parse(msg.content.toString());
+        const response = await service.serveRPCRequest(payload); // call fake DB operation
+        channel.sendToQueue(
+          msg.properties.replyTo,
+          Buffer.from(JSON.stringify(response)),
+          {
+            correlationId: msg.properties.correlationId,
+          }
+        );
+        channel.ack(msg);
+      }
+    },
+    {
+      noAck: false,
+    }
+  );
 };

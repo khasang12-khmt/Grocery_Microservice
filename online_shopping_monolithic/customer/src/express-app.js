@@ -12,7 +12,6 @@ module.exports = async (app, channel) => {
     app.use(express.static(__dirname + '/public'))
 
     //api
-    //appEvents(app);
     customer(app, channel);
 
     // error handling
