@@ -48,10 +48,31 @@ module.exports = (app, channel) => {
 
         const { _id } = req.user;
         try {
-            const { data } = await service.GetOrders(_id);
+            const { data } = await service.GetCart(_id);
             return res.status(200).json(data);
         } catch (err) {
             next(err);
         }
+    });
+
+    app.post('/cart', UserAuth, async (req,res,next) => {
+        const { _id } = req.user;
+        try {
+            const { data } = await service.AddCartItem(_id, req.body._id, req.body.qty);
+            return res.status(200).json(data);
+        } catch (err) {
+            next(err);
+        }
+    });
+
+    app.delete("/cart/:id", UserAuth, async (req, res, next) => {
+      const { _id } = req.user;
+      const productId = req.params.id;
+      try {
+        const { data } = await service.RemoveCartItem(_id, productId);
+        return res.status(200).json(data);
+      } catch (err) {
+        next(err);
+      }
     });
 }

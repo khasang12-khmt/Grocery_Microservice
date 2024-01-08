@@ -1,5 +1,5 @@
 const { ShoppingRepository } = require("../database");
-const { FormateData } = require("../utils");
+const { FormateData, RPCRequest } = require("../utils");
 
 // All Business logic will be here
 class ShoppingService {
@@ -7,13 +7,34 @@ class ShoppingService {
     this.repository = new ShoppingRepository();
   }
 
-  async getCart({ _id }) {
+  async GetCart(_id) {
     try {
       const cartItems = await this.repository.Cart(_id);
       return FormateData(cartItems);
     } catch (err) {
       throw err;
     }
+  }
+
+  async AddCartItem(customerId, productId, qty) {
+    // Get product info from ProductService via RPC
+    const productResponse = await RPCRequest("PRODUCT_RPC", {
+      type: "VIEW_PRODUCT",
+      data: productId
+    });
+    if (productResponse && productResponse._id) {
+      const data = await this.repository.ManageCart(
+        customerId,
+        productResponse,
+        qty
+      );
+      return data;
+    }
+    throw new Error("Product not found");
+  }
+
+  async RemoveCartItem(customerId, productId) {
+    return FormateData(this.repository.ManageCart(customerId, { _id: productId }, 0, true));
   }
 
   async PlaceOrder(userInput) {
