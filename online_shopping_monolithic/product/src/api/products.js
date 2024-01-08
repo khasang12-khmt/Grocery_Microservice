@@ -1,7 +1,5 @@
-const { CUSTOMER_BINDING_KEY, SHOPPING_BINDING_KEY } = require("../config");
 const ProductService = require("../services/product-service");
 const { RPCObserver } = require("../utils");
-const UserAuth = require("./middlewares/auth");
 
 module.exports = (app, channel) => {
   const service = new ProductService();
