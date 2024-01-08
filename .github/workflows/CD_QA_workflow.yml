@@ -1,0 +1,80 @@
+name: Deploy on QA
+
+on:
+  push:
+    branches: ["master"]
+  workflow_dispatch:
+
+jobs:
+  deploy_on_qa:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v2
+
+      - name: Create Customer DotEnv
+        working-directory: ./online_shopping_monolithic/customer
+        run: |
+          touch .env
+          echo APP_SECRET=${{ secrets.QA_APP_SECRET }} >> .env
+          echo MONGODB_URI=${{ secrets.QA_CUSTOMER_DB_URL }} >> .env
+          echo MSG_QUEUE_URL=${{ secrets.QA_MSG_QUEUE_URL }} >> .env
+          echo EXCHANGE_NAME=ONLINE_STORE >> .env
+          echo PORT=8001 >> .env
+          cat .env
+
+      - name: Create Product DotEnv
+        working-directory: ./online_shopping_monolithic/product
+        run: |
+          touch .env
+          echo APP_SECRET=${{ secrets.QA_APP_SECRET }} >> .env
+          echo MONGODB_URI=${{ secrets.QA_PRODUCTS_DB_URL }} >> .env
+          echo MSG_QUEUE_URL=${{ secrets.QA_MSG_QUEUE_URL }} >> .env
+          echo EXCHANGE_NAME=ONLINE_STORE >> .env
+          echo PORT=8002 >> .env
+          cat .env
+
+      - name: Create Shopping DotEnv
+        working-directory: ./online_shopping_monolithic/shopping
+        run: |
+          touch .env
+          echo APP_SECRET=${{ secrets.QA_APP_SECRET }} >> .env
+          echo MONGODB_URI=${{ secrets.QA_SHOPPING_DB_URL }} >> .env
+          echo MSG_QUEUE_URL=${{ secrets.QA_MSG_QUEUE_URL }} >> .env
+          echo EXCHANGE_NAME=ONLINE_STORE >> .env
+          echo PORT=8003 >> .env
+          cat .env
+
+      - name: Generate deployment package
+        run: |
+          zip -r deploy_qa.zip . -x '*.git'
+
+      - name: Get next version
+        uses: reecetech/version-increment@2023.9.3
+        id: version
+        with:
+          scheme: semver
+          increment: patch
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          release_name: Release ${{ steps.version.outputs.version }}
+
+      - name: Deploy on Elastic beanstalk QA Env
+        run: |
+          echo "Simulate CD in DEV"
+        # uses: einaregilsson/beanstalk-deploy@v20
+        # with:
+        #   aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        #   aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        #   application_name: youtube-ms
+        #   environment_name: Youtubems-env
+        #   version_label: "ver-${{ github.sha }}"
+        #   region: eu-central-1
+        #   deployment_package: deploy.zip
