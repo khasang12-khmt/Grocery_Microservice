@@ -1,11 +1,11 @@
-const { CartModel, OrderModel, WishlistModel } = require("../models");
-const { v4: uuidv4 } = require("uuid");
+const { CartModel, OrderModel, WishlistModel } = require('../models');
+const { v4: uuidv4 } = require('uuid');
 const {
-  APIError,
-  BadRequestError,
-  STATUS_CODES,
-} = require("../../utils/app-errors");
-const _ = require("lodash");
+	APIError,
+	BadRequestError,
+	STATUS_CODES,
+} = require('../../utils/app-errors');
+const _ = require('lodash');
 
 //Dealing with data base operations
 class ShoppingRepository {
@@ -82,14 +82,12 @@ class ShoppingRepository {
 		return WishlistModel.findOne({ customerId: customerId });
 	}
 
-	async Orders(customerId) {
-		const cartItems = await CartModel.find({ customerId: customerId });
-
-		if (cartItems) {
-			return cartItems;
+	async Orders(customerId, orderId) {
+		if (orderId) {
+			return OrderModel.findOne({ _id: orderId });
+		} else {
+			return OrderModel.find({ customerId: customerId });
 		}
-
-		throw new Error('Data Not found!');
 	}
 
 	async CreateNewOrder(customerId, txnId) {

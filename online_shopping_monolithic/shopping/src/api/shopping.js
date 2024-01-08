@@ -11,19 +11,13 @@ module.exports = (app, channel) => {
 	app.post('/order', UserAuth, async (req, res, next) => {
 		const { _id } = req.user;
 		const { txnNumber } = req.body;
+        const data = await service.CreateOrder(_id, txnNumber);
+        return res.status(200).json(data)
+	});
 
+    app.get('/order/:id', UserAuth, async (req, res, next) => {
 		try {
-			const { data } = await service.PlaceOrder({ _id, txnNumber });
-			const payload = await service.GetOrderPayload(
-				_id,
-				data,
-				'CREATE_ORDER'
-			);
-			PublishMsg(
-				channel,
-				CUSTOMER_BINDING_KEY,
-				JSON.stringify(payload.data)
-			);
+			const data = await service.GetOrder(req.params.id);
 			return res.status(200).json(data);
 		} catch (err) {
 			next(err);
@@ -32,9 +26,8 @@ module.exports = (app, channel) => {
 
 	app.get('/orders', UserAuth, async (req, res, next) => {
 		const { _id } = req.user;
-
 		try {
-			const { data } = await service.GetOrders(_id);
+			const data = await service.GetOrders(_id);
 			return res.status(200).json(data);
 		} catch (err) {
 			next(err);
