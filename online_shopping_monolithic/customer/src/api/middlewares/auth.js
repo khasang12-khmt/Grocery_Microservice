@@ -1,5 +1,5 @@
 const { ValidateSignature } = require('../../utils');
-const { AuthorizeError } = require('../../utils/app-errors');
+const { AuthorizeError } = require('../../utils/errors/app-errors');
 
 module.exports = async (req, res, next) => {
 	try {

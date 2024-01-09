@@ -3,6 +3,7 @@ const { PORT } = require('./config');
 const { databaseConnection } = require('./database');
 const expressApp = require('./express-app');
 const { CreateChannel } = require('./utils');
+const errorHandler = require('./utils/errors');
 
 const StartServer = async () => {
 	const app = express();
@@ -12,6 +13,8 @@ const StartServer = async () => {
 	const channel = await CreateChannel();
 
 	await expressApp(app, channel);
+
+	errorHandler(app);
 
 	// catch all errors and format and report to logger
 	app.use((error, req, res, next) => {

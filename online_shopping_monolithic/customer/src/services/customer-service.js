@@ -10,7 +10,7 @@ const {
 	APIError,
 	NotFoundError,
 	ValidationError,
-} = require('../utils/app-errors');
+} = require('../utils/errors/app-errors');
 
 // All Business logic will be here
 class CustomerService {
