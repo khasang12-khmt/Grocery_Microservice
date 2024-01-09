@@ -1,6 +1,6 @@
 const { ShoppingRepository } = require('../database');
 const { FormateData, RPCRequest } = require('../utils');
-const { APIError } = require('../utils/app-errors');
+const { APIError } = require('../utils/errors/app-errors');
 
 // All Business logic will be here
 class ShoppingService {
@@ -12,7 +12,7 @@ class ShoppingService {
 	async GetCart(_id) {
 		try {
 			const cartItems = await this.repository.Cart(_id);
-      if(!cartItems) return {};
+			if (!cartItems) return {};
 			return cartItems;
 		} catch (err) {
 			throw err;
@@ -67,11 +67,9 @@ class ShoppingService {
 
 	async GetWishlist(customerId) {
 		// RPC call to get product detail
-		const data = await this.repository.GetWishlistByCustomerId(
-			customerId
-		);
-    if (!data) return {};
-    const { products } = data;
+		const data = await this.repository.GetWishlistByCustomerId(customerId);
+		if (!data) return {};
+		const { products } = data;
 		if (Array.isArray(products)) {
 			const ids = products.map(({ _id }) => _id);
 			const productResponse = await RPCRequest('PRODUCT_RPC', {
@@ -108,7 +106,7 @@ class ShoppingService {
 
 	async SubscribeEvents(payload) {
 		const { event, data } = payload;
-    console.log(payload);
+		console.log(payload);
 		switch (event) {
 			case 'DELETE_PROFILE':
 				await this.DeleteProfileData(data.userId);

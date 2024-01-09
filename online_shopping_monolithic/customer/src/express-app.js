@@ -12,9 +12,5 @@ module.exports = async (app, channel) => {
     app.use(express.static(__dirname + '/public'))
 
     //api
-    customer(app, channel);
-
-    // error handling
-    app.use(HandleErrors);
-    
+    customer(app, channel);    
 }

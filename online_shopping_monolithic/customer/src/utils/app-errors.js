@@ -6,69 +6,53 @@ const STATUS_CODES = {
   INTERNAL_ERROR: 500,
 };
 
-class AppError extends Error {
+class BaseError extends Error {
   constructor(
     name,
     statusCode,
-    description,
-    isOperational,
-    errorStack,
-    logingErrorResponse
+    description
   ) {
     super(description);
     Object.setPrototypeOf(this, new.target.prototype);
     this.name = name;
     this.statusCode = statusCode;
-    this.isOperational = isOperational;
-    this.errorStack = errorStack;
-    this.logError = logingErrorResponse;
     Error.captureStackTrace(this);
   }
 }
 
-//api Specific Errors
-class APIError extends AppError {
-  constructor(
-    name,
-    statusCode = STATUS_CODES.INTERNAL_ERROR,
-    description = "Internal Server Error",
-    isOperational = true
-  ) {
-    super(name, statusCode, description, isOperational);
+// 500
+class APIError extends BaseError {
+  constructor(description = "API Error") {
+    super("API Internal Error", STATUS_CODES.INTERNAL_ERROR, description);
   }
 }
 
-//400
-class BadRequestError extends AppError {
-  constructor(description = "Bad request", logingErrorResponse) {
-    super(
-      "NOT FOUND",
-      STATUS_CODES.BAD_REQUEST,
-      description,
-      true,
-      false,
-      logingErrorResponse
-    );
-  }
+// 400
+class ValidationError extends BaseError {
+	constructor(description = 'Bad Request') {
+		super('Bad Request', STATUS_CODES.BAD_REQUEST, description);
+	}
 }
 
-//400
-class ValidationError extends AppError {
-  constructor(description = "Validation Error", errorStack) {
-    super(
-      "BAD REQUEST",
-      STATUS_CODES.BAD_REQUEST,
-      description,
-      true,
-      errorStack
-    );
-  }
+// 403
+class AuthorizeError extends BaseError {
+	constructor(description = 'Access Denied') {
+		super('Access Denied', STATUS_CODES.UN_AUTHORISED, description);
+	}
+}
+
+// 404
+class NotFoundError extends BaseError {
+	constructor(description = 'Not Found') {
+		super('Not Found', STATUS_CODES.NOT_FOUND, description);
+	}
 }
 
 module.exports = {
-  AppError,
-  APIError,
-  BadRequestError,
-  ValidationError,
-  STATUS_CODES,
+	BaseError,
+	APIError,
+	AuthorizeError,
+	NotFoundError,
+	ValidationError,
+	STATUS_CODES,
 };
