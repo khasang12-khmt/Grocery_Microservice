@@ -1,93 +1,53 @@
-const { ProductModel } = require("../models");
-const { APIError, BadRequestError } = require("../../utils/app-errors");
+const { ProductModel } = require('../models');
+const { APIError, BadRequestError } = require('../../utils/errors/app-errors');
 
 //Dealing with data base operations
 class ProductRepository {
-  async CreateProduct({
-    name,
-    desc,
-    type,
-    unit,
-    price,
-    available,
-    suplier,
-    banner,
-  }) {
-    try {
-      const product = new ProductModel({
-        name,
-        desc,
-        type,
-        unit,
-        price,
-        available,
-        suplier,
-        banner,
-      });
+	async CreateProduct({
+		name,
+		desc,
+		type,
+		unit,
+		price,
+		available,
+		suplier,
+		banner,
+	}) {
+		const product = new ProductModel({
+			name,
+			desc,
+			type,
+			unit,
+			price,
+			available,
+			suplier,
+			banner,
+		});
 
-      const productResult = await product.save();
-      return productResult;
-    } catch (err) {
-      throw new APIError(
-        "API Error",
-        STATUS_CODES.INTERNAL_ERROR,
-        "Unable to Create Product"
-      );
-    }
-  }
+		const productResult = await product.save();
+		return productResult;
+	}
 
-  async Products() {
-    try {
-      return await ProductModel.find();
-    } catch (err) {
-      throw new APIError(
-        "API Error",
-        STATUS_CODES.INTERNAL_ERROR,
-        "Unable to Get Products"
-      );
-    }
-  }
+	async Products() {
+		return await ProductModel.find();
+	}
 
-  async FindById(id) {
-    try {
-      return await ProductModel.findById(id);
-    } catch (err) {
-      throw new APIError(
-        "API Error",
-        STATUS_CODES.INTERNAL_ERROR,
-        "Unable to Find Product"
-      );
-    }
-  }
+	async FindById(id) {
+		return await ProductModel.findById(id);
+	}
 
-  async FindByCategory(category) {
-    try {
-      const products = await ProductModel.find({ type: category });
-      return products;
-    } catch (err) {
-      throw new APIError(
-        "API Error",
-        STATUS_CODES.INTERNAL_ERROR,
-        "Unable to Find Category"
-      );
-    }
-  }
+	async FindByCategory(category) {
+		const products = await ProductModel.find({ type: category });
+		return products;
+	}
 
-  async FindSelectedProducts(selectedIds) {
-    try {
-      const products = await ProductModel.find()
-        .where("_id")
-        .in(selectedIds.map((_id) => _id))
-        .exec();
-      return products;
-    } catch (err) {
-      throw new APIError(
-        "API Error",
-        STATUS_CODES.INTERNAL_ERROR,
-        "Unable to Find Product"
-      );
-    }
-  }
+	async FindSelectedProducts(selectedIds) {
+		const products = await ProductModel.find()
+			.where('_id')
+			.in(selectedIds.map((_id) => _id))
+			.exec();
+		return products;
+	}
 }
 
 module.exports = ProductRepository;

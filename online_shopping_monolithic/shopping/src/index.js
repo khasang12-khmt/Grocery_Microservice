@@ -3,6 +3,7 @@ const { PORT } = require('./config');
 const { databaseConnection } = require('./database');
 const expressApp = require('./express-app');
 const { CreateChannel } = require('./utils');
+const errorHandler = require('./utils/errors');
 
 const StartServer = async() => {
     const app = express();
@@ -10,8 +11,10 @@ const StartServer = async() => {
     await databaseConnection();
 
     const channel = await CreateChannel();
-    
+
     await expressApp(app, channel);
+
+    errorHandler(app);
 
     app.listen(PORT, () => {
         console.log("From Shopping");

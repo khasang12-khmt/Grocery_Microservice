@@ -6,7 +6,11 @@ const {
 	GenerateSignature,
 	ValidatePassword,
 } = require('../utils');
-const { APIError, BadRequestError } = require('../utils/app-errors');
+const {
+	APIError,
+	NotFoundError,
+	ValidationError,
+} = require('../utils/errors/app-errors');
 
 // All Business logic will be here
 class CustomerService {
@@ -17,86 +21,64 @@ class CustomerService {
 	async SignIn(userInputs) {
 		const { email, password } = userInputs;
 
-		try {
-			const existingCustomer = await this.repository.FindCustomer({
-				email,
-			});
+		const existingCustomer = await this.repository.FindCustomer({
+			email,
+		});
+		if (!existingCustomer) throw new NotFoundError('user not found');
 
-			if (existingCustomer) {
-				const validPassword = await ValidatePassword(
-					password,
-					existingCustomer.password,
-					existingCustomer.salt
-				);
+		const validPassword = await ValidatePassword(
+			password,
+			existingCustomer.password,
+			existingCustomer.salt
+		);
+		if (!validPassword) throw new ValidationError('password not valid');
 
-				if (validPassword) {
-					const token = await GenerateSignature({
-						email: existingCustomer.email,
-						_id: existingCustomer._id,
-					});
-					return FormateData({ id: existingCustomer._id, token });
-				}
-			}
-
-			return FormateData(null);
-		} catch (err) {
-			throw new APIError('Data Not found', err);
-		}
+		const token = await GenerateSignature({
+			email: existingCustomer.email,
+			_id: existingCustomer._id,
+		});
+		return FormateData({ id: existingCustomer._id, token });
 	}
 
 	async SignUp(userInputs) {
 		const { email, password, phone } = userInputs;
 
-		try {
-			// create salt
-			let salt = await GenerateSalt();
+		let salt = await GenerateSalt();
 
-			let userPassword = await GeneratePassword(password, salt);
+		let userPassword = await GeneratePassword(password, salt);
 
-			const existingCustomer = await this.repository.CreateCustomer({
-				email,
-				password: userPassword,
-				phone,
-				salt,
-			});
+		const existingCustomer = await this.repository.CreateCustomer({
+			email,
+			password: userPassword,
+			phone,
+			salt,
+		});
 
-			const token = await GenerateSignature({
-				email: email,
-				_id: existingCustomer._id,
-			});
+		const token = await GenerateSignature({
+			email: email,
+			_id: existingCustomer._id,
+		});
 
-			return FormateData({ id: existingCustomer._id, token });
-		} catch (err) {
-			throw new APIError('Data Not found', err);
-		}
+		return FormateData({ id: existingCustomer._id, token });
 	}
 
 	async AddNewAddress(_id, userInputs) {
 		const { street, postalCode, city, country } = userInputs;
-
-		try {
-			const addressResult = await this.repository.CreateAddress({
-				_id,
-				street,
-				postalCode,
-				city,
-				country,
-			});
-			return FormateData(addressResult);
-		} catch (err) {
-			throw new APIError('Data Not found', err);
-		}
+		return this.repository.CreateAddress({
+			_id,
+			street,
+			postalCode,
+			city,
+			country,
+		});
 	}
 
 	async GetProfile(id) {
-		try {
-			const existingCustomer = await this.repository.FindCustomerById({
-				id,
-			});
-			return FormateData(existingCustomer);
-		} catch (err) {
-			throw new APIError('Data Not found', err);
-		}
+		const existingCustomer = await this.repository.FindCustomerById({
+			id,
+		});
+		if (!existingCustomer) throw new NotFoundError('user not found');
+		return existingCustomer;
 	}
 
 	async DeleteProfile(id) {

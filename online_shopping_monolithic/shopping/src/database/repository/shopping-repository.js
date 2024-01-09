@@ -4,7 +4,7 @@ const {
 	APIError,
 	BadRequestError,
 	STATUS_CODES,
-} = require('../../utils/app-errors');
+} = require('../../utils/errors/app-errors');
 const _ = require('lodash');
 
 //Dealing with data base operations
